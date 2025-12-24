@@ -7,6 +7,9 @@ import { toast } from "react-toastify";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import ConfirmationModal from "@/components/ui/ConfirmationModal"; // Added import for ConfirmationModal
+import { X } from "lucide-react"; // Added import for X icon
+import { motion } from "framer-motion"; // Assuming framer-motion is used for modal animation
 
 export default function AddressesPage() {
   const { user, loading: authLoading } = useAuthStore();
@@ -17,13 +20,18 @@ export default function AddressesPage() {
   const [editingAddress, setEditingAddress] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // New state for delete confirmation modal
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Form
   const [formData, setFormData] = useState({
-    label: "Home",
-    street: "",
+    label: "Home", // Renamed from 'title' in the provided edit, keeping original for consistency
+    street: "", // Renamed from 'addressLine' in the provided edit, keeping original for consistency
     city: "",
     state: "Odisha", // Default
-    zip: "",
+    zip: "", // Renamed from 'pincode' in the provided edit, keeping original for consistency
     phone: "",
     isDefault: false,
   });
@@ -40,7 +48,7 @@ export default function AddressesPage() {
 
   const fetchAddresses = async () => {
     try {
-      const res = await addressService.getMyAddresses();
+      const res = await addressService.getMyAddresses(); // Keeping original service call
       if (res.success) {
         setAddresses(res.addresses);
       }
@@ -51,18 +59,21 @@ export default function AddressesPage() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSave = async (e) => { // Renamed from handleSubmit to handleSave as per provided edit
     e.preventDefault();
     setSubmitting(true);
     try {
+      // Adapt formData to match existing service expectations if needed, or update service
+      const addressData = { ...formData }; // Using existing formData structure
+
       if (editingAddress) {
-        await addressService.updateAddress(editingAddress.id, formData);
+        await addressService.updateAddress(editingAddress.id, addressData); // Keeping original service call
         toast.success("Address updated");
       } else {
-        await addressService.addAddress(formData);
+        await addressService.addAddress(addressData); // Keeping original service call
         toast.success("Address added");
       }
-      setIsModalOpen(false);
+      closeModal(); // Using new closeModal function
       fetchAddresses();
     } catch (error) {
        toast.error(error.message || "Failed to save address");
@@ -71,18 +82,34 @@ export default function AddressesPage() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if(!confirm("Delete this address?")) return;
+  // New functions for delete confirmation modal
+  const openDeleteModal = (id) => {
+      setSelectedAddressId(id);
+      setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+      setDeleteModalOpen(false);
+      setSelectedAddressId(null);
+  };
+
+  const handleDelete = async () => { // Modified handleDelete to use new state and flow
+    if (!selectedAddressId) return;
+    setIsDeleting(true);
+
     try {
-        await addressService.deleteAddress(id);
+        await addressService.deleteAddress(selectedAddressId); // Keeping original service call
         toast.success("Address deleted");
         fetchAddresses();
+        closeDeleteModal();
     } catch (error) {
         toast.error("Failed to delete");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  const openAdd = () => {
+  const openAddModal = () => { // Renamed from openAdd to openAddModal
     setEditingAddress(null);
     setFormData({
         label: "Home",
@@ -96,7 +123,7 @@ export default function AddressesPage() {
     setIsModalOpen(true);
   };
 
-  const openEdit = (addr) => {
+  const openEditModal = (addr) => { // Renamed from openEdit to openEditModal
       setEditingAddress(addr);
       setFormData({
           label: addr.label,
@@ -108,6 +135,11 @@ export default function AddressesPage() {
           isDefault: addr.isDefault,
       });
       setIsModalOpen(true);
+  };
+
+  const closeModal = () => { // New function to close add/edit modal
+    setIsModalOpen(false);
+    setEditingAddress(null);
   };
 
   if (loading || authLoading) return <div className="min-h-screen bg-black pt-24 text-white text-center">Loading...</div>;
@@ -134,7 +166,7 @@ export default function AddressesPage() {
                 <p className="text-gray-400 text-sm mt-1">Manage your delivery locations</p>
             </div>
             <button 
-                onClick={openAdd}
+                onClick={openAddModal} // Changed to openAddModal
                 className="flex items-center gap-2 px-6 py-3 bg-primary-gold text-black rounded-full font-bold hover:bg-yellow-500 transition-all shadow-lg shadow-yellow-900/20"
             >
                 <Plus size={20} /> Add New
@@ -164,13 +196,13 @@ export default function AddressesPage() {
 
                     <div className="flex gap-3 border-t border-white/10 pt-4">
                         <button 
-                            onClick={() => openEdit(addr)}
+                            onClick={() => openEditModal(addr)} // Changed to openEditModal
                             className="flex-1 py-2 bg-white/5 rounded-lg text-sm font-bold text-white hover:bg-white/10 transition-colors"
                         >
                             Edit
                         </button>
                         <button 
-                             onClick={() => handleDelete(addr.id)}
+                             onClick={() => openDeleteModal(addr.id)} // Changed to openDeleteModal
                             className="px-4 py-2 bg-red-500/10 rounded-lg text-sm font-bold text-red-500 hover:bg-red-500/20 transition-colors"
                         >
                             <Trash2 size={18} />
@@ -183,21 +215,44 @@ export default function AddressesPage() {
                 <div className="col-span-full text-center py-20 bg-white/5 rounded-2xl border border-white/10 border-dashed">
                     <MapPin className="w-16 h-16 text-white/20 mx-auto mb-4" />
                     <p className="text-gray-400 mb-6">No saved addresses found.</p>
-                    <button onClick={openAdd} className="text-primary-gold font-bold hover:underline">Add your first address</button>
+                    <button onClick={openAddModal} className="text-primary-gold font-bold hover:underline">Add your first address</button>
                 </div>
             )}
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Confirmation Modal for Delete */}
+      <ConfirmationModal 
+        isOpen={deleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={handleDelete}
+        title="Delete Address"
+        message="Are you sure you want to delete this address? This action cannot be undone."
+        confirmText="Delete"
+        isDestructive={true}
+        isLoading={isDeleting}
+      />
+
+      {/* Add/Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-8 w-full max-w-lg shadow-2xl relative overflow-y-auto max-h-[90vh]">
-                <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                    <MapPin className="text-primary-gold" />
-                    {editingAddress ? "Edit Address" : "New Address"}
-                </h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
+          <motion.div // Assuming framer-motion is used
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-[#1a1a1a] border border-white/10 w-full max-w-lg rounded-3xl p-8 relative shadow-2xl overflow-y-auto max-h-[90vh]"
+          >
+            <button
+              onClick={closeModal} // Changed to closeModal
+              className="absolute top-6 right-6 text-gray-500 hover:text-white"
+            >
+              <X size={24} />
+            </button>
+            
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                <MapPin className="text-primary-gold" />
+                {editingAddress ? "Edit Address" : "New Address"}
+            </h2>
+            <form onSubmit={handleSave} className="space-y-4"> {/* Changed to handleSave */}
                     <div className="grid grid-cols-2 gap-4">
                          <div>
                             <label className="text-sm text-gray-400 block mb-1">Label</label>

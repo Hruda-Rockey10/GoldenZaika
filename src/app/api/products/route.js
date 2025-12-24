@@ -46,8 +46,7 @@ export const GET = (req) =>
           ...doc.data(),
         }))
         .filter(
-          (product) =>
-            product.isActive !== false && product.isAvailable !== false // Also filter by availability
+          (product) => product.isActive !== false // Only filter by isActive (deleted), keep isAvailable (stock) visible
         );
 
       // Set cache

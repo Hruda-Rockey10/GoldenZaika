@@ -3,18 +3,23 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useCartStore } from "@/stores/cart.store";
+import { useAuthStore } from "@/stores/auth.store"; // Import Auth
 import { productService } from "@/services/product.service";
+import { favoriteService } from "@/services/favorite.service"; // Import Favorite Service
 import FoodModal from "@/components/ui/FoodModal";
 import FoodCard from "@/components/ui/FoodCard";
 import Loading from "@/components/ui/Loading";
 import { motion } from "framer-motion";
 import RecommendedSection from "@/components/user/RecommendedSection";
+import { toast } from "react-toastify"; // Import Toast
 
 export default function Home() {
+  const { user } = useAuthStore(); // Get User
   const [foods, setFoods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState("All");
   const [selectedFood, setSelectedFood] = useState(null);
+  const [favorites, setFavorites] = useState(new Set()); // Favorites State
 
   const items = useCartStore((state) => state.items);
   const addToCart = useCartStore((state) => state.addToCart);
@@ -27,21 +32,61 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const fetchFoods = async () => {
+    const fetchData = async () => {
       try {
-        const res = await productService.getProducts();
-        if (res.success) {
-          setFoods(res.products); // Adjusted to match API response { success: true, products: [] }
+        const [productRes, favRes] = await Promise.all([
+             productService.getProducts(),
+             user ? favoriteService.getMyFavorites() : Promise.resolve({ success: false }) 
+        ]);
+
+        if (productRes.success) {
+          setFoods(productRes.products); 
+        }
+
+        if (favRes && favRes.success) {
+            setFavorites(new Set(favRes.favorites.map(f => f.id || f._id)));
         }
       } catch (error) {
-        console.error("Failed to fetch foods", error);
+        console.error("Failed to fetch data", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFoods();
-  }, []);
+    fetchData();
+  }, [user]);
+
+  const toggleFavorite = async (e, food) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (!user) {
+          toast.error("Please login to save favorites");
+          return;
+      }
+      
+      const id = food.id || food._id;
+      const isFav = favorites.has(id);
+      
+      try {
+          // Optimistic update
+          const newFavs = new Set(favorites);
+          if(isFav) newFavs.delete(id);
+          else newFavs.add(id);
+          setFavorites(newFavs);
+
+          if (isFav) {
+              await favoriteService.removeFavorite(id);
+              toast.info("Removed from favorites");
+          } else {
+              await favoriteService.addFavorite(id);
+              toast.success("Added to favorites");
+          }
+      } catch (error) {
+          // Revert on error
+          setFavorites(new Set(favorites)); 
+          toast.error("Failed to update favorite");
+      }
+  };
 
   // Filter Logic
   const filteredFoods =
@@ -285,6 +330,8 @@ export default function Home() {
                   addToCart={addToCart}
                   updateQuantity={updateQuantity}
                   quantity={getQuantity(food.id || food._id)}
+                  isFavorite={favorites.has(food.id || food._id)}
+                  onToggleFavorite={toggleFavorite}
                 />
               ))
             ) : (

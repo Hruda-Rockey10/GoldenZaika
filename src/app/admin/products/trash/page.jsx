@@ -8,10 +8,20 @@ import Link from "next/link";
 import { ArrowLeft, RotateCcw, Trash2 } from "lucide-react";
 import { productService } from "@/services/product.service";
 
+import ConfirmationModal from "@/components/ui/ConfirmationModal";
+
 export default function ProductTrashPage() {
   const router = useRouter();
   const [trashedProducts, setTrashedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Modal State
+  const [confirmState, setConfirmState] = useState({
+      isOpen: false,
+      type: null, // "RESTORE" or "DELETE"
+      id: null,
+  });
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const fetchTrashedProducts = async () => {
     try {
@@ -33,48 +43,50 @@ export default function ProductTrashPage() {
     fetchTrashedProducts();
   }, []);
 
-  const handleRestore = async (productId) => {
-    if (!confirm("Restore this product?")) return;
-
-    // Optimistic update
-    setTrashedProducts(prev => prev.filter(p => (p._id || p.id) !== productId));
-    toast.info("Restoring product...");
-
-    try {
-      const response = await productService.restoreProduct(productId);
-      if (response.success) {
-        toast.success("Product restored successfully!");
-      } else {
-        toast.error("Failed to restore product");
-        await fetchTrashedProducts(); // Rollback
-      }
-    } catch (error) {
-      console.error("Restore error:", error);
-      toast.error("Failed to restore product");
-      await fetchTrashedProducts(); // Rollback
-    }
+  // 1. Open Modals
+  const onRestoreClick = (id) => {
+      setConfirmState({ isOpen: true, type: "RESTORE", id });
+  };
+  
+  const onDeleteClick = (id) => {
+      setConfirmState({ isOpen: true, type: "DELETE", id });
   };
 
-  const handlePermanentDelete = async (productId) => {
-    if (!confirm("⚠️ PERMANENTLY DELETE this product? This CANNOT be undone!")) return;
+  // 2. Handle Actions
+  const handleConfirmAction = async () => {
+      if(!confirmState.id) return;
 
-    // Optimistic update
-    setTrashedProducts(prev => prev.filter(p => (p._id || p.id) !== productId));
-    toast.info("Permanently deleting...");
+      setIsProcessing(true);
+      const { type, id } = confirmState;
+      const originalList = [...trashedProducts];
 
-    try {
-      const response = await productService.permanentDeleteProduct(productId);
-      if (response.success) {
-        toast.success("Product permanently deleted");
-      } else {
-        toast.error("Failed to delete permanently");
-        await fetchTrashedProducts(); // Rollback
+      // Optimistic Update
+      setTrashedProducts(prev => prev.filter(p => (p._id || p.id) !== id));
+
+      try {
+          if (type === "RESTORE") {
+              const response = await productService.restoreProduct(id);
+              if (response.success) {
+                  toast.success("Product restored successfully!");
+              } else {
+                  throw new Error("Failed to restore");
+              }
+          } else if (type === "DELETE") {
+              const response = await productService.permanentDeleteProduct(id);
+              if (response.success) {
+                  toast.success("Product permanently deleted");
+              } else {
+                  throw new Error("Failed to delete");
+              }
+          }
+      } catch (error) {
+          console.error("Action error:", error);
+          toast.error(`Failed to ${type === "RESTORE" ? "restore" : "delete"}`);
+          setTrashedProducts(originalList); // Rollback
+      } finally {
+          setIsProcessing(false);
+          setConfirmState({ isOpen: false, type: null, id: null });
       }
-    } catch (error) {
-      console.error("Permanent delete error:", error);
-      toast.error("Failed to delete permanently");
-      await fetchTrashedProducts(); // Rollback
-    }
   };
 
   if (loading) {
@@ -156,7 +168,7 @@ export default function ProductTrashPage() {
                       <div className="flex items-center gap-2">
                         {/* Restore Button */}
                         <button
-                          onClick={() => handleRestore(item._id || item.id)}
+                          onClick={() => onRestoreClick(item._id || item.id)}
                           className="p-2 text-gray-400 hover:text-green-400 hover:bg-green-400/10 rounded-full transition-colors"
                           title="Restore product"
                         >
@@ -164,7 +176,7 @@ export default function ProductTrashPage() {
                         </button>
                         {/* Permanent Delete Button */}
                         <button
-                          onClick={() => handlePermanentDelete(item._id || item.id)}
+                          onClick={() => onDeleteClick(item._id || item.id)}
                           className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors"
                           title="Delete permanently"
                         >
@@ -179,6 +191,22 @@ export default function ProductTrashPage() {
           </div>
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmState.isOpen}
+        onClose={() => setConfirmState({ ...confirmState, isOpen: false })}
+        onConfirm={handleConfirmAction}
+        title={confirmState.type === "RESTORE" ? "Restore Product?" : "Permanent Delete"}
+        message={
+            confirmState.type === "RESTORE" 
+            ? "This will move the product back to the active list." 
+            : "⚠️ Warning: This action cannot be undone. The product will be permanently removed from the database."
+        }
+        confirmText={confirmState.type === "RESTORE" ? "Restore" : "Delete Permanently"}
+        isDestructive={confirmState.type === "DELETE"}
+        isLoading={isProcessing}
+      />
     </div>
   );
 }

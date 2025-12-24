@@ -7,9 +7,16 @@ import Link from "next/link";
 import { Trash2, Pencil } from "lucide-react";
 import { productService } from "@/services/product.service";
 
+import ConfirmationModal from "@/components/ui/ConfirmationModal";
+
 export default function AdminProductsPage() {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Modal State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchList = useCallback(async () => {
     try {
@@ -27,25 +34,37 @@ export default function AdminProductsPage() {
     }
   }, []);
 
-  const handleRemoveFood = async (foodId) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
+  // 1. Triggered when user clicks "Delete" icon
+  const handleDeleteClick = (id) => {
+    setProductToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
 
-    // Optimistic update - remove from UI immediately
-    setList(prev => prev.filter(item => (item._id || item.id) !== foodId));
-    toast.info("Deleting product...");
+  // 2. Triggered when user confirms in Modal
+  const handleConfirmDelete = async () => {
+    if (!productToDelete) return;
+
+    setIsDeleting(true);
+    // Optimistic Update
+    const originalList = [...list];
+    setList(prev => prev.filter(item => (item._id || item.id) !== productToDelete));
 
     try {
-      const response = await productService.removeProduct(foodId);
+      const response = await productService.removeProduct(productToDelete);
       if (response.success) {
-        toast.success("Food Removed Successfully");
+        toast.success("Food Moved to Trash");
       } else {
-        // Rollback on error
-        toast.error("Error removing food");
-        await fetchList(); // Re-fetch to restore state
+        toast.error("Failed to delete");
+        setList(originalList); // Rollback
       }
     } catch (error) {
-      toast.error("Error removing food");
-      await fetchList(); // Re-fetch to restore state
+      console.error("Delete error:", error);
+      toast.error("Server Error");
+      setList(originalList); // Rollback
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+      setProductToDelete(null);
     }
   };
 
@@ -151,7 +170,7 @@ export default function AdminProductsPage() {
                       </Link>
                       {/* Delete Button */}
                       <button
-                        onClick={() => handleRemoveFood(item._id || item.id)}
+                        onClick={() => handleDeleteClick(item._id || item.id)}
                         className="p-2 text-gray-400 hover:text-primary-red hover:bg-primary-red/10 rounded-full transition-colors"
                       >
                         <Trash2 size={20} />
@@ -168,6 +187,17 @@ export default function AdminProductsPage() {
           </table>
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Product"
+        message="Are you sure you want to delete this product? It will be moved to Trash."
+        confirmText="Delete"
+        isDestructive={true}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

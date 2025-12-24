@@ -2,7 +2,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { ShoppingCart, Star, Info } from "lucide-react";
+import { ShoppingCart, Star, Info, Heart } from "lucide-react";
 
 export default function FoodCard({
   food,
@@ -11,6 +11,8 @@ export default function FoodCard({
   addToCart,
   updateQuantity,
   quantity,
+  isFavorite = false,
+  onToggleFavorite,
 }) {
   const id = food.id || food._id; // Normalize ID
 
@@ -21,7 +23,7 @@ export default function FoodCard({
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 0.4 }}
-      className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:border-primary-gold/50 transition-all duration-300 group hover:shadow-[0_0_20px_rgba(255,215,0,0.15)] flex flex-col"
+      className={`bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:border-primary-gold/50 transition-all duration-300 group hover:shadow-[0_0_20px_rgba(255,215,0,0.15)] flex flex-col ${!food.isAvailable ? 'grayscale opacity-70' : ''}`}
     >
       <div className="relative h-56 w-full overflow-hidden">
         <Image
@@ -35,6 +37,31 @@ export default function FoodCard({
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
           priority={index < 6}
         />
+        
+        {!food.isAvailable && (
+          <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[2px]">
+            <span className="bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg">
+              Out of Stock
+            </span>
+          </div>
+        )}
+
+        {/* Favorite Button (Only if handler is provided) */}
+        {onToggleFavorite && (
+          <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFavorite(e, food);
+              }}
+              className={`absolute top-3 left-3 p-2 rounded-full backdrop-blur-sm border transition-all duration-300 z-10 ${
+                  isFavorite 
+                  ? "bg-red-500 text-white border-red-500 scale-110" 
+                  : "bg-black/40 text-gray-300 border-white/10 hover:bg-black/60 hover:text-white"
+              }`}
+          >
+              <Heart size={18} fill={isFavorite ? "currentColor" : "none"} />
+          </button>
+        )}
       </div>
 
       <div className="p-5 flex-1 flex flex-col">
@@ -74,7 +101,14 @@ export default function FoodCard({
             />
           </button>
 
-          {quantity > 0 ? (
+          {!food.isAvailable ? (
+            <button
+               disabled
+               className="w-full py-3 bg-white/5 border border-white/5 text-gray-500 font-bold rounded-xl cursor-not-allowed flex items-center justify-center gap-2"
+            >
+               Unavailable
+            </button>
+          ) : quantity > 0 ? (
             <div className="flex items-center justify-between bg-black/40 rounded-xl p-1 border border-white/10">
               <button
                 onClick={(e) => {
