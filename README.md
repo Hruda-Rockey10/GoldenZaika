@@ -1,19 +1,27 @@
 # Golden Zaika - Food Delivery Application
 
-A modern, full-stack food delivery application built with **Next.js 15**, **Firebase**, and **Razorpay**. This project has been streamlined from a previous microservices architecture into a unified, high-performance serverless-style application.
-
 ## 🚀 Tech Stack
 
-- **Framework:** [Next.js 15](https://nextjs.org/) (App Router)
-- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/)
-- **State Management:** [Zustand](https://github.com/pmndrs/zustand)
-- **Backend / Database:** Firebase (Firestore, Auth, Storage)
+- **Frontend Framework:** Next.js 15 (App Router)
+- **UI Libraries:**
+  - Tailwind CSS v4 (Styling)
+  - Framer Motion (Animations)
+  - GSAP (Advanced Animations)
+  - Lucide React (Icons)
+- **State Management:** Zustand
+- **Backend Services:**
+  - Next.js API Routes (Serverless Functions)
+  - Firebase Authentication (Auth)
+  - Firebase Firestore (Database)
+  - Firebase Storage (File Uploads)
+  - Upstash Redis (Caching & Rate Limiting)
+- **Artificial Intelligence:** Google Gemini (Generative AI)
 - **Payments:** Razorpay
-- **UI Components:** Lucide React, Framer Motion, GSAP
+- **Utilities:**
+  - Axios (Data Fetching)
+  - PDF Generation (`jspdf`)
 
 ## 🏗️ Architecture
-
-The application uses a serverless architecture where Next.js handles both the frontend UI and the backend API routes. The system incorporates **Zustand** for state management, **Redis** for caching, and **Gemini AI** for intelligent features.
 
 ```mermaid
 graph TD
@@ -72,108 +80,84 @@ graph TD
     class FB_Auth,FB_DB,FB_Storage,RP ext;
 ```
 
-## ✨ Key Features
+## ✨ Features and Functionality
 
-### 👤 User App Features
+### 👤 User Application
 
-- **Authentication System:**
+- **Authentication**
+  - Phone Number Login
+  - Email Login
+  - Protected Routes
+- **Discovery**
+  - Real-time Menu Sync
+  - Category Filtering
+  - AI-Powered Ingredient Search
+  - AI Personalized Recommendations
+- **Ordering**
+  - Persistent Cart (Zustand)
+  - Razorpay Payment Integration
+  - Real-time Order Tracking
+  - Order History
+  - Invoice Generation
 
-  - Secure phone number and email based login protected by Firebase Authentication.
-  - Profile management for addresses and personal details.
+### 🛡️ Admin Dashboard
 
-- **Smart Menu & Discovery:**
+- **Management**
+  - Real-time Order Monitoring
+  - Status Updates (Pending -> Delivered)
+  - Menu Item CRUD Operations
+  - Image Uploads (Firebase Storage)
+  - Service Zone Configuration
+- **Analytics**
+  - Revenue Graphs
+  - User Activity Stats
+  - Top Selling Items
+- **Support**
+  - Customer Message Center
 
-  - **Dynamic Catalogue:** Real-time synchronized menu with category filtering.
-  - **Smart Search:** AI-powered search to find dishes by ingredients (e.g., "spicy chicken with rice").
-  - **Personalized Recommendations:** AI suggestions based on order history and preferences.
+### 🤖 AI Capabilities (Gemini)
 
-- **Ordering Experience:**
-  - **Cart Management:** Persistent cart state using local storage and Zustand.
-  - **Seamless Checkout:** Integrated Razorpay payment gateway for secure transactions.
-  - **Real-time Tracking:** Live order status updates (Pending -> Processing -> Out -> Delivered).
-  - **Order History:** Detailed history of past orders with re-order functionality.
-
-### 🛡️ Admin Dashboard (`/admin`)
-
-- **Operational Control:**
-
-  - **Order Management:** View all incoming orders in real-time. Update statuses to keep users informed.
-  - **Menu Management:** Add, edit, or delete items. Upload images directly to Firebase Storage.
-  - **Service Zones:** Define delivery zones and operational hours.
-
-- **Analytics & Insights:**
-
-  - **Dashboard:** Visual graphs showing revenue trends, top-selling items, and active user counts.
-  - **Report Generation:** Export order data for offline analysis.
-
-- **Customer Support:**
-  - **Message Center:** View and reply to customer inquiries directly from the dashboard.
-
-### 🤖 AI Integration (Gemini)
-
-The application leverages **Google Gemini AI** to enhance the user experience:
-
-- **Nutritional Analysis:** Automatically generates nutritional facts (calories, protein, etc.) for menu items based on descriptions.
-- **Smart Recommendations:** Suggests dishes to users based on their browsing patterns and past orders.
-- **Content Generation:** Auto-generates appetizing descriptions for new menu items added by admins.
-- **Intelligent Search:** Natural language search capabilities allowing users to describe what they crave.
-
-## 🛠️ Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- Firebase Project credentials
-- Razorpay Account credentials
-
-### Installation
-
-1. **Clone the repository**
-
-   ```bash
-   git clone https://github.com/yourusername/golden-zaika.git
-   cd golden-zaika
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   npm install
-   ```
-
-3. **Environment Setup**
-   Create a `.env` file in the root directory and add your credentials:
-
-   ```env
-   # Firebase
-   NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
-   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-   # ... other firebase config
-
-   # Razorpay
-   NEXT_PUBLIC_RAZORPAY_KEY_ID=your_key_id
-   RAZORPAY_KEY_SECRET=your_key_secret
-   ```
-
-4. **Run Locally**
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) to view the app.
+- Nutritional Analysis (Calories/Macros)
+- Smart Product Description Generation
+- Intelligent Natural Language Search
+- User Taste Profiling
 
 ## 📂 Project Structure
 
 ```
-GoldenZaika/
-├── src/
-│   ├── app/              # App Router Pages & API Routes
-│   ├── components/       # Shared UI Components
-│   ├── services/         # API Service Layer
-│   ├── lib/              # Utility libraries (Firebase, etc.)
-│   └── store/            # Zustand Store
-├── public/               # Static Assets
-├── .env                  # Environment Variables
-├── next.config.js        # Next.js Configuration
-└── README.md             # Project Documentation
+src/
+├── app/              # Next.js App Router (Pages & API)
+├── components/       # Reusable UI Components
+├── constants/        # App-wide Constants
+├── hooks/            # Custom React Hooks
+├── lib/              # Integrations (Firebase, Redis, Gemini)
+├── services/         # Client-side API Services
+├── stores/           # Zustand State Management
+└── utils/            # Helper Functions & API Wrappers
 ```
+
+## 🛠️ Getting Started
+
+1.  **Clone Repository**
+
+    - `git clone [url]`
+    - `cd [folder]`
+
+2.  **Install Dependencies**
+
+    - `npm install`
+
+3.  **Configure Environment**
+
+    - Create `.env`
+    - Add Firebase credentials
+    - Add Razorpay keys
+    - Add Gemini API key
+
+4.  **Run Application**
+    - `npm run dev`
+    - Access at `http://localhost:3000`
+
+---
+
+### Created with ❤️ by Hrudananda Behera
