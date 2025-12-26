@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "modules": "npm install --legacy-peer-deps"
+    "modules": "npm install --legacy-peer-deps",
+    "deploy": "npm run build && firebase deploy --only hosting",
+    "deploy:preview": "npm run build && firebase hosting:channel:deploy preview",
+    "firebase:login": "firebase login",
+    "firebase:init": "firebase init hosting"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

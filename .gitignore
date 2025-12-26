@@ -40,3 +40,6 @@ storage.rules
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# firebase deployment cache
+.firebase/

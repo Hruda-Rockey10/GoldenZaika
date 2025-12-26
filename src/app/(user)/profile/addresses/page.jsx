@@ -236,7 +236,7 @@ export default function AddressesPage() {
       {/* Add/Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <motion.div // Assuming framer-motion is used
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="bg-[#1a1a1a] border border-white/10 w-full max-w-lg rounded-3xl p-8 relative shadow-2xl overflow-y-auto max-h-[90vh]"
@@ -331,7 +331,7 @@ export default function AddressesPage() {
                         </button>
                     </div>
                 </form>
-            </div>
+            </motion.div>
         </div>
       )}
       </div>
