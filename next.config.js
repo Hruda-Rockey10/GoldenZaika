@@ -18,6 +18,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "golden-zaika-4afb1.firebasestorage.app",
       },
+      {
+        protocol: "https",
+        hostname: "via.placeholder.com",
+      },
     ],
   },
 };

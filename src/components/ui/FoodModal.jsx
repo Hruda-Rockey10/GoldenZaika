@@ -79,6 +79,28 @@ export default function FoodModal({
               {food.description}
             </p>
 
+            {/* Nutrition Info */}
+            {food.nutrition && (
+              <div className="grid grid-cols-4 gap-2 mb-8 bg-white/5 p-4 rounded-xl border border-white/5">
+                <div className="text-center">
+                  <div className="text-xs text-gray-400 mb-1">Cals</div>
+                  <div className="text-white font-bold">{food.nutrition.calories}</div>
+                </div>
+                <div className="text-center border-l border-white/10">
+                  <div className="text-xs text-gray-400 mb-1">Protein</div>
+                  <div className="text-white font-bold">{food.nutrition.protein}g</div>
+                </div>
+                <div className="text-center border-l border-white/10">
+                  <div className="text-xs text-gray-400 mb-1">Carbs</div>
+                  <div className="text-white font-bold">{food.nutrition.carbs}g</div>
+                </div>
+                <div className="text-center border-l border-white/10">
+                  <div className="text-xs text-gray-400 mb-1">Fat</div>
+                  <div className="text-white font-bold">{food.nutrition.fat}g</div>
+                </div>
+              </div>
+            )}
+
             {/* Controls */}
             <div className="mt-auto">
               {quantity > 0 ? (

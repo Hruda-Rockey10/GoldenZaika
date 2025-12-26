@@ -6,6 +6,7 @@ import {
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { auth, db } from "../lib/firebase/client";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
@@ -74,6 +75,7 @@ class AuthService {
         await this.createUserDocument(user, {
           name: user.displayName,
           role: "user",
+          photoURL: user.photoURL,
         });
       }
 
@@ -92,6 +94,19 @@ class AuthService {
       await signOut(auth);
     } catch (error) {
       logger.error("AuthService.logout error", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Send password reset email
+   * @param {string} email
+   */
+  async sendPasswordResetEmail(email) {
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error) {
+      logger.error("AuthService.sendPasswordResetEmail error", error);
       throw error;
     }
   }
