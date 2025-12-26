@@ -1,10 +1,37 @@
 import Razorpay from "razorpay";
 
-if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-  throw new Error("Razorpay credentials are missing in env vars");
-}
+let razorpayInstance = null;
 
-export const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+/**
+ * Get or create Razorpay instance
+ * Lazy initialization pattern to avoid build-time errors
+ */
+export const getRazorpay = () => {
+  if (!razorpayInstance) {
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!keyId || !keySecret) {
+      throw new Error(
+        "Razorpay credentials are missing in environment variables"
+      );
+    }
+
+    razorpayInstance = new Razorpay({
+      key_id: keyId,
+      key_secret: keySecret,
+    });
+  }
+
+  return razorpayInstance;
+};
+
+// Backward compatibility export
+export const razorpay = {
+  get orders() {
+    return getRazorpay().orders;
+  },
+  get payments() {
+    return getRazorpay().payments;
+  },
+};
