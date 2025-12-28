@@ -1,27 +1,68 @@
-# Golden Zaika - Food Delivery Application
+# 🍔 **Golden Zaika** - _Premium Food Delivery Platform_
 
-## 🚀 Tech Stack
+<div align="center">
 
-- **Frontend Framework:** Next.js 15 (App Router)
-- **UI Libraries:**
-  - Tailwind CSS v4 (Styling)
-  - Framer Motion (Animations)
-  - GSAP (Advanced Animations)
-  - Lucide React (Icons)
-- **State Management:** Zustand
-- **Backend Services:**
-  - Next.js API Routes (Serverless Functions)
-  - Firebase Authentication (Auth)
-  - Firebase Firestore (Database)
-  - Firebase Storage (File Uploads)
-  - Upstash Redis (Caching & Rate Limiting)
-- **Artificial Intelligence:** Google Gemini (Generative AI)
-- **Payments:** Razorpay
-- **Utilities:**
-  - Axios (Data Fetching)
-  - PDF Generation (`jspdf`)
+[![Next.js](https://img.shields.io/badge/Next.js-16.1.1-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.2.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Firebase](https://img.shields.io/badge/Firebase-FFA611?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
+[![Razorpay](https://img.shields.io/badge/Razorpay-Secure-blue?style=for-the-badge&logo=razorpay&logoColor=white)](https://razorpay.com/)
 
-## 🏗️ Architecture
+**Experience the taste of luxury.**
+A fully featured, AI-powered food delivery application built with the latest modern web technologies.
+
+[🚀 **Launch Live App**](https://golden-zaika.vercel.app/)
+
+</div>
+
+---
+
+## 🛠️ **Tech Stack**
+
+A cutting-edge stack designed for performance, scalability, and user experience.
+
+### **Frontend**
+
+- **Framework:** [Next.js 16.1.1](https://nextjs.org/) (App Router)
+- **UI Library:** [React 19.2.3](https://react.dev/)
+- **Styling:** [Tailwind CSS 3.4](https://tailwindcss.com/)
+- **Animations:** [Framer Motion](https://www.framer.com/motion/) + [GSAP](https://gsap.com/)
+- **Icons:** [Lucide React](https://lucide.dev/)
+- **Notifications:** [React Toastify](https://fkhadra.github.io/react-toastify/introduction)
+- **Forms:** [React Hook Form](https://react-hook-form.com/)
+
+### **Backend**
+
+- **API:** Next.js API Routes (Serverless)
+- **Database:** [Firebase Firestore](https://firebase.google.com/products/firestore) (NoSQL)
+- **Authentication:** [Firebase Auth](https://firebase.google.com/products/auth)
+- **File Storage:** [Firebase Storage](https://firebase.google.com/products/storage)
+- **Caching:** [Upstash Redis](https://upstash.com/) (Serverless)
+- **Rate Limiting:** `@upstash/ratelimit`
+
+### **Services & Integrations**
+
+- **Payments:** [Razorpay](https://razorpay.com/)
+- **Artificial Intelligence:** [Google Gemini AI](https://deepmind.google/technologies/gemini/) (Product descriptions, recommendations, nutrition analysis)
+- **Contact Forms:** [Web3Forms](https://web3forms.com/)
+- **PDF Generation:** `jspdf`
+
+### **State Management**
+
+- **Global Client State:** [Zustand](https://github.com/pmndrs/zustand)
+- **Server State:** React Hooks + Firebase Real-time Listeners
+
+### **DevOps**
+
+- **Hosting:** [Vercel](https://vercel.com/) (Auto CI/CD)
+- **Package Manager:** `npm`
+- **Node Version:** 20.x
+
+---
+
+## 🏗️ **Architecture**
+
+High-level overview of how the client, server, and external services interact.
 
 ```mermaid
 graph TD
@@ -80,84 +121,101 @@ graph TD
     class FB_Auth,FB_DB,FB_Storage,RP ext;
 ```
 
-## ✨ Features and Functionality
+---
 
-### 👤 User Application
+## ✨ **Key Features**
 
-- **Authentication**
-  - Phone Number Login
-  - Email Login
-  - Protected Routes
-- **Discovery**
-  - Real-time Menu Sync
-  - Category Filtering
-  - AI-Powered Ingredient Search
-  - AI Personalized Recommendations
-- **Ordering**
-  - Persistent Cart (Zustand)
-  - Razorpay Payment Integration
-  - Real-time Order Tracking
-  - Order History
-  - Invoice Generation
+### 👤 **User Application**
 
-### 🛡️ Admin Dashboard
+- **🛒 Smart Ordering:** Persistent cart, real-time updates, and order history.
+- **🔐 Secure Auth:** Robust authentication via Firebase (Email/Password, Phone).
+- **💸 Easy Payments:** Seamless checkout process integrated with **Razorpay**.
+- **🧾 Invoicing:** Automatic PDF invoice generation for every order.
 
-- **Management**
-  - Real-time Order Monitoring
-  - Status Updates (Pending -> Delivered)
-  - Menu Item CRUD Operations
-  - Image Uploads (Firebase Storage)
-  - Service Zone Configuration
-- **Analytics**
-  - Revenue Graphs
-  - User Activity Stats
-  - Top Selling Items
-- **Support**
-  - Customer Message Center
+### 🛡️ **Admin Dashboard**
 
-### 🤖 AI Capabilities (Gemini)
+- **📊 Live Monitoring:** Real-time dashboard for tracking orders and status changes.
+- **✏️ Content Management:** Full CRUD capabilities for menu items and categories.
+- **📈 Analytics:** visual graphs and stats for revenue, sales, and user activity.
+- **📨 Customer Support:** Integrated message center for handling inquiries.
 
-- Nutritional Analysis (Calories/Macros)
-- Smart Product Description Generation
-- Intelligent Natural Language Search
-- User Taste Profiling
+### 🤖 **AI Capabilities (Gemini)**
 
-## 📂 Project Structure
-
-```
-src/
-├── app/              # Next.js App Router (Pages & API)
-├── components/       # Reusable UI Components
-├── constants/        # App-wide Constants
-├── hooks/            # Custom React Hooks
-├── lib/              # Integrations (Firebase, Redis, Gemini)
-├── services/         # Client-side API Services
-├── stores/           # Zustand State Management
-└── utils/            # Helper Functions & API Wrappers
-```
-
-## 🛠️ Getting Started
-
-1.  **Clone Repository**
-
-    - `git clone [url]`
-    - `cd [folder]`
-
-2.  **Install Dependencies**
-
-    - `npm install`
-
-3.  **Configure Environment**
-
-    - Create `.env`
-    - Add Firebase credentials
-    - Add Razorpay keys
-    - Add Gemini API key
-
-4.  **Run Application**
-    - `npm run dev`
-    - Access at `http://localhost:3000`
+- **Intelligent Recommendations:** Suggests food based on browsing habits.
+- **Nutritional Analysis:** Automatically calculates calories and macros.
+- **Content Gen:** Creates appetizing product descriptions instantly.
 
 ---
 
-### Created with ❤️ by Hrudananda Behera
+## 📂 **Project Structure**
+
+```
+src/
+├── app/              # Next.js App Router (Pages & API endpoints)
+├── components/       # Reusable UI Components (Buttons, Cards, Modals)
+├── constants/        # App-wide fixed data and configuration
+├── hooks/            # Custom React Hooks (useAuth, useCart)
+├── lib/              # core library configurations (Firebase, Gemini, Redis)
+├── scripts/          # Utility scripts for data migration or seeding
+├── services/         # API Service layer (Auth, Order, Product services)
+├── stores/           # Global state management (Zustand stores)
+└── utils/            # Helper functions and formatted utilities
+```
+
+---
+
+## 🚀 **Getting Started**
+
+Follow these steps to set up the project locally.
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Hruda-Rockey10/Nextjs---Firebase.git
+cd "Nextjs---Firebase"
+```
+
+### 2. Install Dependencies
+
+> **Note:** Use the custom script to ensure legacy peer dependencies are handled correctly.
+
+```bash
+npm run modules
+# OR
+npm install --legacy-peer-deps
+```
+
+### 3. Configure Environment
+
+Create a `.env` file in the root directory and populate it with your keys:
+
+```env
+# Firebase
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+FIREBASE_ADMIN_PRIVATE_KEY="your_private_key"
+
+# Payment
+RAZORPAY_KEY_ID=your_razorpay_key
+RAZORPAY_KEY_SECRET=your_razorpay_secret
+
+# AI & Database
+GEMINI_API_KEY=your_gemini_key
+UPSTASH_REDIS_REST_URL=your_redis_url
+UPSTASH_REDIS_REST_TOKEN=your_redis_token
+```
+
+### 4. Run Development Server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) to view the app.
+
+---
+
+<div align="center">
+  <b>Created with ❤️ by Hrudananda Behera</b>
+</div>

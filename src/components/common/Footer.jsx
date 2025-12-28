@@ -97,14 +97,26 @@ export default function Footer() {
                 text="Tailwind"
                 icon="https://cdn.simpleicons.org/tailwindcss"
               />
-              <TechBadge text="Zustand" icon="https://github.com/pmndrs/zustand/raw/main/bear.png" />
+              <TechBadge text="Zustand" icon="/assets/zustand-bear.png" />
               <TechBadge
                 text="Redis"
                 icon="https://cdn.simpleicons.org/redis"
               />
               <TechBadge
+                text="Gemini AI"
+                icon="https://cdn.simpleicons.org/googlegemini"
+              />
+              <TechBadge
                 text="Razorpay"
                 icon="https://cdn.simpleicons.org/razorpay"
+              />
+              <TechBadge
+                text="Firestore"
+                icon="https://cdn.simpleicons.org/firebase"
+              />
+              <TechBadge
+                text="Storage"
+                icon="https://cdn.simpleicons.org/firebase"
               />
             </div>
           </div>

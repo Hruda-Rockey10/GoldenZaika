@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { apiWrapper } from "@/utils/api-wrapper";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+import { verifyAuth, verifyAdmin } from "@/lib/auth/server-auth";
+
 // Initialize Gemini
 let genAI;
 let model;
@@ -35,6 +37,10 @@ Output:
 
 export const POST = (req) =>
   apiWrapper(async (request) => {
+    // Auth Check (Admins Only)
+    const user = await verifyAuth(request);
+    await verifyAdmin(user.uid);
+
     const { name, category, isVeg } = await request.json();
 
     if (!name) {

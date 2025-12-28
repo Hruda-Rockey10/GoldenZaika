@@ -3,7 +3,19 @@ import { adminDb } from "@/lib/firebase/admin";
 import { redis } from "@/lib/redis/upstash";
 import { logger } from "@/lib/logger/logger";
 
-export async function GET() {
+import { verifyAuth, verifyAdmin } from "@/lib/auth/server-auth";
+
+export async function GET(request) {
+  try {
+    const user = await verifyAuth(request);
+    await verifyAdmin(user.uid);
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Unauthorized: Admins only" },
+      { status: 401 }
+    );
+  }
+
   const status = {
     firebase: "unknown",
     redis: "unknown",

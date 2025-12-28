@@ -11,6 +11,9 @@ const poppins = Poppins({
 export const metadata = {
   title: 'GoldenZaika',
   description: 'Premium Food Delivery App',
+  icons: {
+    icon: '/favicon.png', // Uses public/favicon.png
+  },
 };
 
 import AuthProvider from '../components/common/AuthProvider';

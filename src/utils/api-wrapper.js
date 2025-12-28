@@ -15,6 +15,12 @@ export async function apiWrapper(handler, req, context) {
   if (endpoint.includes("/api/ai")) limitType = "strict";
   if (endpoint.includes("/api/auth")) limitType = "strict";
 
+  // Public Endpoint Protection (Spam/Brute Force)
+  if (endpoint.includes("/api/messages") && req.method === "POST")
+    limitType = "strict";
+  if (endpoint.includes("/api/coupons/apply") && req.method === "POST")
+    limitType = "strict";
+
   if (limitType) {
     try {
       // Use IP for now. Ideally should be User ID if logged in.
