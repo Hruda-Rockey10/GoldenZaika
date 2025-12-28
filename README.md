@@ -11,7 +11,7 @@
 **Experience the taste of luxury.**
 A fully featured, AI-powered food delivery application built with the latest modern web technologies.
 
-[🚀 **Launch Live App**](https://golden-zaika.vercel.app/)
+[🚀 **Launch Live App**](https://goldenzaika.vercel.app/)
 
 </div>
 
