@@ -15,6 +15,7 @@ const firebaseConfig = {
 // Initialize Firebase only once
 const app =
   getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+//  So the array will only ever have one item in it. That item is always at index 0.
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);

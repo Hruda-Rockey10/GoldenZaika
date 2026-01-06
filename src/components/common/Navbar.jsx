@@ -11,7 +11,7 @@ export default function Navbar() {
   const { user, role } = useAuthStore();
   const cartItemsCount = useCartStore((state) => state.getTotalItems());
   const [mounted, setMounted] = useState(false);
-  const pathname = usePathname();
+  const pathname = usePathname(); // Menu Page: Returns "/menu"
   const router = useRouter();
 
   useEffect(() => {
@@ -29,6 +29,10 @@ export default function Navbar() {
   };
 
   const isActive = (path) => pathname === path;
+  // (path) => pathname === path:
+  // 1. (path): Arguments (What I need)
+  // 2. =>: Arrow (Returns what follows)
+  // 3. pathname === path: Logic (True/False check)
 
   if (pathname.startsWith("/admin")) return null;
 
@@ -52,6 +56,7 @@ export default function Navbar() {
           {isActive("/") && (
             <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-primary-gold rounded-full"></span>
           )}
+           {/* // Draw the gold bar underneath the word. */}
         </Link>
         <Link
           href="/menu"

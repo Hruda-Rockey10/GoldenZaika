@@ -14,10 +14,12 @@ import { logger } from "../lib/logger/logger";
 
 class AuthService {
   /**
-   * Register a new user
+   * Register a new user    It does not affect how the code runs. It acts as documentation
    * @param {string} email
    * @param {string} password
    * @param {string} name
+   * It tells VS Code that the function expects
+   * an argument called email and it should be a text string.
    */
   async register(email, password, name) {
     try {
@@ -28,11 +30,27 @@ class AuthService {
       );
       const user = userCredential.user;
 
-      // Update display name
+      //   {
+      //   user: {
+      //     uid: "a1b2c3d4e5f6...",       // The unique ID for this user
+      //     email: "test@example.com",    // The email they utilized
+      //     emailVerified: false,         // Have they clicked the verify link?
+      //     displayName: null,            // Currently empty (until you update it)
+      //     isAnonymous: false,           // Is this a guest user?
+      //     providerData: [...],          // Info if they used Google/Facebook
+      //     ... (many internal methods like getIdToken)
+      //   },
+      //   providerId: null,               // "password" (since you used email/pass)
+      //   operationType: "signIn"         // What just happened
+      // }
+
       await updateProfile(user, { displayName: name });
 
       // Create user document in Firestore
       await this.createUserDocument(user, { name, role: "user" });
+
+      //  THIS refers to the AuthService class itself.
+      //  You are calling a "sibling" function that lives in the same house. (line 135-153)
 
       return user;
     } catch (error) {
@@ -120,6 +138,8 @@ class AuthService {
     if (!user) return;
 
     const userRef = doc(db, "users", user.uid);
+    // doc = Create a Reference (a pointer/address) to a specific document.
+    // UseRed = to store the address of the document.
     try {
       await setDoc(
         userRef,
@@ -130,6 +150,9 @@ class AuthService {
           ...additionalData,
         },
         { merge: true }
+        // : It intelligently updates the document.
+        // It adds new fields or updates existing ones,
+        // but leaves other existing fields alone. It's safer.
       );
     } catch (error) {
       logger.error("Error creating user document", error);

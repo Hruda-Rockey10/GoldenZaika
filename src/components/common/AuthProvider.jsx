@@ -29,3 +29,7 @@ export default function AuthProvider({ children }) {
 
   return <>{children}</>;
 }
+
+//Firebase SDK automatically saves the user's 
+// session token in the browser's internal storage (IndexedDB )
+// async (user ) fetches IndexDB for check user state , or any changes in user state (login logout)

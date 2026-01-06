@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useState, useEffect, useRef } from "react";
 import { Sparkles } from "lucide-react";
 import FoodCard from "@/components/ui/FoodCard";
 import { useCartStore } from "@/stores/cart.store";
+import { aiService } from "@/services/ai.service";
 
-export default function RecommendedSection() {
+export default function RecommendedSection({ onSelect }) {
   const [recommendations, setRecommendations] = useState([]);
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(true);
+  const fetchedRef = useRef(false);
 
   const addToCart = useCartStore((state) => state.addToCart);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
@@ -21,21 +22,19 @@ export default function RecommendedSection() {
   };
 
   useEffect(() => {
+    if (fetchedRef.current) return; // Prevent 2 times call API causing 429
+    fetchedRef.current = true;
+
     const fetchRecommendations = async () => {
       try {
-        const res = await axios.post("/api/ai/recommend", {});
-        if (res.data.success && res.data.items.length > 0) {
-          setRecommendations(res.data.items);
-          setReason(res.data.reason);
+        const data = await aiService.getRecommendations();
+
+        if (data.success && data.items.length > 0) {
+          setRecommendations(data.items);
+          setReason(data.reason);
         }
       } catch (error) {
-        // Silently handle rate limit (429) or other errors
-        // Just don't show recommendations section
-        if (error.response?.status === 429) {
-          console.log("AI recommendations rate limited - skipping");
-        } else {
-          console.error("Failed to fetch recommendations", error);
-        }
+        console.error("Failed to fetch recommendations", error);
       } finally {
         setLoading(false);
       }
@@ -65,7 +64,7 @@ export default function RecommendedSection() {
             key={item.id || item._id} 
             food={item}
             index={index}
-            onSelect={() => {}}
+            onSelect={onSelect}
             addToCart={addToCart}
             updateQuantity={updateQuantity}
             quantity={getQuantity(item.id || item._id)}

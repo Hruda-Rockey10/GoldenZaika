@@ -5,6 +5,7 @@ import { Package, RefreshCw, Clock, CheckCircle2, Download, XCircle } from "luci
 import { useAuthStore } from "@/stores/auth.store";
 import { useCartStore } from "@/stores/cart.store";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import jsPDF from "jspdf";
@@ -377,12 +378,12 @@ export default function MyOrdersPage() {
               <Package className="w-20 h-20 mx-auto mb-6 text-white/10" />
               <h2 className="text-2xl font-bold text-white mb-2">No Orders Yet</h2>
               <p className="text-gray-400 mb-8">You haven&apos;t placed any orders yet.</p>
-              <button
-                onClick={() => router.push("/menu")}
-                className="px-8 py-3 bg-primary-gold text-black font-bold rounded-full hover:bg-yellow-500 transition-colors"
+              <Link
+                href="/menu"
+                className="px-8 py-3 bg-primary-gold text-black font-bold rounded-full hover:bg-yellow-500 transition-colors inline-block"
               >
                 Start Ordering
-              </button>
+              </Link>
             </motion.div>
           )}
         </div>

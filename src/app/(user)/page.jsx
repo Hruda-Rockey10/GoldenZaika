@@ -11,7 +11,8 @@ import FoodCard from "@/components/ui/FoodCard";
 import Loading from "@/components/ui/Loading";
 import { motion } from "framer-motion";
 import RecommendedSection from "@/components/user/RecommendedSection";
-import { toast } from "react-toastify"; // Import Toast
+import { toast } from "react-toastify";
+import Link from "next/link"; // Import Toast
 
 export default function Home() {
   const { user } = useAuthStore(); // Get User
@@ -34,6 +35,8 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        //await Promise.all([promise1, promise2, promise3]);
+        // Promise.all() is used to wait for multiple promises to resolve.
         const [productRes, favRes] = await Promise.all([
              productService.getProducts(),
              user ? favoriteService.getMyFavorites() : Promise.resolve({ success: false }) 
@@ -56,9 +59,7 @@ export default function Home() {
     fetchData();
   }, [user]);
 
-  const toggleFavorite = async (e, food) => {
-      e.stopPropagation();
-      e.preventDefault();
+  const toggleFavorite = async (food) => {
       if (!user) {
           toast.error("Please login to save favorites");
           return;
@@ -140,12 +141,13 @@ export default function Home() {
             Experience authentic flavors delivered straight to your doorstep.
             Premium quality, unforgettable taste.
           </p>
-          <a
+          <Link
             href="#menu"
+            scroll={true}
             className="px-8 py-4 bg-primary-gold text-black font-bold rounded-full text-lg hover:bg-yellow-500 transition-all shadow-lg shadow-yellow-900/40 transform hover:scale-105 inline-block"
           >
             Order Now
-          </a>
+          </Link>
         </motion.div>
 
         {/* Gradient Fade at bottom to blend into next section */}
@@ -159,7 +161,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          viewport={{ once: true, amount: 0.2 }}
+          viewport={{ once: true, amount: 0.2 }}  // "Play only once". &&  Trigger when 20% visible".
         >
           <div className="flex justify-between items-end mb-10">
             <div>
@@ -198,6 +200,7 @@ export default function Home() {
                 className="w-12 h-12 rounded-full border border-primary-gold text-primary-gold flex items-center justify-center hover:bg-primary-gold hover:text-black transition-all"
                 onClick={() => {
                   const container = document.getElementById("menu-slider");
+                  // It searches the entire HTML document for the one single element that has the attribute id="menu-slider"
                   container.scrollBy({ left: 320, behavior: "smooth" });
                 }}
               >
@@ -239,16 +242,18 @@ export default function Home() {
               },
               { name: "Salad", img: "/assets/food-types/salad.webp" },
               { name: "Samosa", img: "/assets/food-types/samosa.webp" },
-            ].map((item, index) => (
+            ].map((item, index) => (   // Index= This is the position number (counter)
               <motion.div
-                key={index}
+                key={index} // It is used to uniquely identify each element in the array.
                 className={`min-w-[280px] md:min-w-[320px] snap-start group cursor-pointer border rounded-3xl p-3 transition-all ${
                   category === item.name
                     ? "border-primary-gold bg-white/10"
                     : "border-white/10 bg-black/40 hover:border-white/30"
                 }`}
+                //  ` ${} ` It allows you to inject dynamic JavaScript variables or logic directly into a string. 
+                // You must use backticks (`) for this to work,
                 onClick={() =>
-                  setCategory((prev) =>
+                  setCategory((prev) => //puts the current state value into the prev variable.
                     prev === item.name ? "All" : item.name
                   )
                 }
@@ -265,7 +270,7 @@ export default function Home() {
                     fill
                     className="object-cover transform group-hover:scale-110 transition-transform duration-700"
                     sizes="(max-width: 768px) 100vw, 320px"
-                    priority={index < 4}
+                    priority={index < 4} //Load these specific images IMMEDIATELY, even before the rest of the page finishes processing."
                   />
                 </div>
 
@@ -310,7 +315,7 @@ export default function Home() {
         {/* Menu Section */}
         <section id="menu" className="pb-20 px-4 md:px-12 max-w-7xl mx-auto">
           {/* AI Recommendations */}
-          <RecommendedSection />
+          <RecommendedSection onSelect={setSelectedFood} />
 
           <h2 className="text-4xl font-bold text-center mb-12 text-white">
             Delicious <span className="text-primary-gold">Delights</span>
@@ -321,7 +326,7 @@ export default function Home() {
             layout
           >
             {filteredFoods.length > 0 ? (
-              filteredFoods.map((food, index) => (
+              filteredFoods.slice(0, 16).map((food, index) => (
                 <FoodCard
                   key={food.id || food._id}
                   food={food}

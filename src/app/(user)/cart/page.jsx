@@ -119,17 +119,17 @@ export default function CartPage() {
 
     // Generate PDF with proper filename using manual download link
     const filename = `GoldenZaika_Invoice_${invoiceNum}.pdf`;
-    const pdfBlob = doc.output("blob");
+    const pdfBlob = doc.output("blob"); // Blob = Binary Large Object
 
     // Create a proper download link to ensure filename is preserved
-    const url = URL.createObjectURL(pdfBlob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const url = URL.createObjectURL(pdfBlob); // Create a URL for the PDF
+    const link = document.createElement("a");  // Create a download link
+    link.href = url; // Set the URL of the link
+    link.download = filename; // Set the filename for the download
+    document.body.appendChild(link); // Add the link to the document
+    link.click(); // Trigger the download
+    document.body.removeChild(link); // Remove the link from the document
+    URL.revokeObjectURL(url); // Free up memory
   };
 
   return (
@@ -311,8 +311,8 @@ export default function CartPage() {
                     Download Invoice
                   </button>
 
-                  <button
-                    onClick={() => router.push("/checkout")}
+                  <Link
+                    href="/checkout"
                     className="w-full py-4 bg-primary-gold text-black font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-yellow-500 transition-all shadow-lg shadow-yellow-900/20 group hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <span>Proceed To Checkout</span>
@@ -320,7 +320,7 @@ export default function CartPage() {
                       size={20}
                       className="group-hover:translate-x-1 transition-transform"
                     />
-                  </button>
+                  </Link>
 
                   <div className="mt-6 flex items-center justify-center text-green-400 gap-2 text-sm font-medium opacity-80">
                     <ShieldCheck size={16} />

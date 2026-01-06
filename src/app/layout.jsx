@@ -32,3 +32,24 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
+
+// It sees src/app/(user).
+// It treats the contents of (user) as if they were right in the root.
+// It finds src/app/(user)/page.jsx.
+// Result: This file becomes your Homepage (/).
+
+/*
+ * Component Hierarchy Visualized:
+ *
+ * <GlobalError>                 // src/app/global-error.jsx (Handles RootLayout crashes)
+ *   <RootLayout>                // src/app/layout.jsx
+ *     <AuthProvider>            // src/components/common/AuthProvider.jsx
+ *       <ErrorBoundary>         // src/app/error.jsx (Wrapper for page errors)
+ *         <UserLayout>          // src/app/(user)/layout.jsx
+ *           <HomePage />        // src/app/(user)/page.jsx
+ *         </UserLayout>
+ *       </ErrorBoundary>
+ *     </AuthProvider>
+ *   </RootLayout>
+ * </GlobalError>
+ */

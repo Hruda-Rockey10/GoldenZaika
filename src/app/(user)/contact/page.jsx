@@ -11,9 +11,9 @@ import { authService } from "@/services/auth.service";
 
 export default function ContactPage() {
   const {
-    register,
-    handleSubmit,
-    reset,
+    register, // to track the input fields and spread the register object to the input fields
+    handleSubmit,   // to handle the form submission
+    reset, // to reset the form
     formState: { errors, isSubmitting },
   } = useForm({
     mode: "onTouched",
@@ -50,7 +50,7 @@ export default function ContactPage() {
     }
 
     // 2. Submit to Web3Forms
-    onSubmitWeb3(data);
+    onSubmitWeb3(data); // to submit the form to web3forms
   };
 
   return (
@@ -122,7 +122,7 @@ export default function ContactPage() {
                       <h4 className="font-bold text-xl mb-1 text-white">
                         Phone Number
                       </h4>
-                      <p className="text-gray-400">+91 7978326 ***</p>
+                      <p className="text-gray-400">+91 797832* ***</p>
                     </div>
                   </motion.div>
 
@@ -161,8 +161,9 @@ export default function ContactPage() {
                   type="checkbox"
                   className="hidden"
                   style={{ display: "none" }}
-                  {...register("botcheck")}
+                  {...register("botcheck")} // ...register
                 />
+                
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -180,6 +181,16 @@ export default function ContactPage() {
                         maxLength: 80,
                       })}
                     />
+
+                    {/* 
+                      // Register spreads these props:
+                      // name: "name",
+                      // onChange: (event) => { logic to save value + run validation },
+                      // onBlur: (event) => { logic to mark field as 'touched' },
+                      // ref: (element) => { reference to the DOM node },
+                      // required: true,      // Adds HTML5 'required' attribute
+                      // maxLength: 80        // Adds HTML5 'maxLength' attribute
+                    */}
                     {errors.name && (
                       <p className="mt-1 text-sm text-red-500 ml-1">
                         {errors.name.message}

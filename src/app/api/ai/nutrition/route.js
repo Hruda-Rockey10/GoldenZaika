@@ -1,21 +1,24 @@
 import { NextResponse } from "next/server";
 import { verifyAuth } from "@/lib/auth/server-auth";
 import { apiWrapper } from "@/utils/api-wrapper";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 import { redis } from "@/lib/redis/upstash"; // Import Redis
 import crypto from "crypto";
 
-// Initialize Gemini
-let genAI;
-let model;
-try {
-  if (process.env.GEMINI_API_KEY) {
-    genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
-  }
-} catch (e) {
-  console.error("Gemini Init Error", e);
-}
+const openai = new OpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY,
+  defaultHeaders: {
+    "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+    "X-Title": "Golden Zaika",
+  },
+});
+const MODELS = [
+  "mistralai/devstral-2512:free",
+  "xiaomi/mimo-v2-flash:free",
+  "google/gemini-2.0-flash-exp:free",
+  "openai/gpt-oss-120b:free",
+];
 
 const SYSTEM_PROMPT = `
 You are a Smart Nutrition Advisor for a food delivery app. 
@@ -30,8 +33,10 @@ Output Format: JSON
   "analysis": "Brief summary of the meal's balance.",
   "score": "Number 1-10",
   "macros": { "protein": "Low/Good/High", "carbs": "Low/Good/High", "fat": "Low/Good/High" },
-  "suggestions": ["Tip 1", "Tip 2"]
+  "suggestions": ["Tip 1", "Tip 2"],
+  "estimated_nutrition": { "calories": 0, "protein": 0, "carbs": 0, "fat": 0 }
 }
+If exact data is missing, please provide your best estimates in "estimated_nutrition".
 Keep it concise and friendly.
 `;
 
@@ -51,10 +56,17 @@ export const POST = (req) =>
 
     const breakdown = items.map((item) => {
       const qty = item.quantity || 1;
-      const cals = (item.calories || 0) * qty;
-      const prot = (item.protein || 0) * qty;
-      const carbs = (item.carbs || 0) * qty;
-      const fat = (item.fat || 0) * qty;
+
+      // Handle both top-level (new) and nested (legacy) nutrition data
+      const iCals = item.calories || item.nutrition?.calories || 0;
+      const iProt = item.protein || item.nutrition?.protein || 0;
+      const iCarbs = item.carbs || item.nutrition?.carbs || 0;
+      const iFat = item.fat || item.nutrition?.fat || 0;
+
+      const cals = iCals * qty;
+      const prot = iProt * qty;
+      const carbs = iCarbs * qty;
+      const fat = iFat * qty;
 
       totalCalories += cals;
       totalProtein += prot;
@@ -71,10 +83,22 @@ export const POST = (req) =>
     const cacheKey = `ai:nutrition:${hash}`;
 
     let aiResponse = null;
+    let modelUsed = "redis-cache";
 
     // 1. Check Redis
     try {
-      aiResponse = await redis.get(cacheKey);
+      const cachedData = await redis.get(cacheKey);
+      if (cachedData) {
+        console.log("🟢 [NUTRITION] Serving from Redis Cache");
+        // Backward compatibility check for old cache format
+        if (cachedData.analysis) {
+          aiResponse = cachedData;
+          modelUsed = "redis-cache (legacy)";
+        } else {
+          aiResponse = cachedData.aiResponse;
+          modelUsed = cachedData.modelUsed || "redis-cache";
+        }
+      }
     } catch (e) {
       console.warn("Redis GET error", e);
     }
@@ -88,10 +112,13 @@ export const POST = (req) =>
         macros: { protein: "-", carbs: "-", fat: "-" },
         suggestions: ["Could not analyze meal."],
       };
+      modelUsed = "fallback";
 
       const userContext = userProfile
         ? `User Profile: Age ${userProfile.age}, Gender ${userProfile.gender}, Goal ${userProfile.goal}`
         : "User Profile: General Adult";
+
+      const missingData = totalCalories === 0;
 
       const prompt = `
         ${userContext}
@@ -99,56 +126,90 @@ export const POST = (req) =>
         Meal Content:
         ${breakdown.join("\n")}
         
-        Total Nutrition:
+        Total Nutrition (Calculated from Metadata):
         Calories: ${totalCalories} kcal
         Protein: ${totalProtein} g
         Carbs: ${totalCarbs} g
         Fat: ${totalFat} g
+
+        ${
+          missingData
+            ? "IMPORTANT: The metadata for these items is missing nutrition facts (showing 0). Please ESTIMATE the total calories and macros based on the standard serving size of these dishes. Provide your estimated totals in the analysis text, but you cannot change the numeric 'totals' response field, just explain it in the text."
+            : ""
+        }
         `;
 
-      if (model) {
-        try {
-          console.log("🤖 Calling Gemini API for nutrition analysis...");
+      try {
+        console.log("🤖 Calling OpenRouter AI for nutrition analysis...");
 
-          const result = await model.generateContent([SYSTEM_PROMPT, prompt]);
+        let text = null;
 
-          const response = await result.response;
-          const text = response.text();
+        // Retry Logic with Multiple Models
+        for (const model of MODELS) {
+          try {
+            console.log(`🤖 [NUTRITION] Calling Model: ${model}`);
+            const completion = await openai.chat.completions.create({
+              model: model,
+              messages: [
+                { role: "system", content: SYSTEM_PROMPT },
+                { role: "user", content: prompt },
+              ],
+              response_format: { type: "json_object" },
+            });
 
-          console.log("✅ Gemini Response received");
-
-          // Extract JSON from response
-          const jsonMatch = text.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            aiResponse = JSON.parse(jsonMatch[0]);
-          } else {
-            console.warn("⚠️ Could not parse JSON from Gemini response");
+            text = completion.choices[0].message.content;
+            if (text) {
+              console.log(`✅ [NUTRITION] Success with ${model}`);
+              modelUsed = model;
+              break; // Success!
+            }
+          } catch (modelError) {
+            console.warn(
+              `⚠️ [NUTRITION] Model ${model} failed:`,
+              modelError.message
+            );
+            // Continue to next model
           }
-
-          // 3. Set Cache (24 Hours)
-          await redis.set(cacheKey, aiResponse, { ex: 86400 });
-        } catch (error) {
-          console.error("Gemini Error:", error);
         }
-      } else {
-        // Mock Response for dev if no key
+
+        if (!text) throw new Error("All AI models failed");
+
+        console.log("✅ AI Response received");
+
+        // Extract JSON from response
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          aiResponse = JSON.parse(jsonMatch[0]);
+        } else {
+          console.warn("⚠️ Could not parse JSON from AI response");
+        }
+
+        // 3. Set Cache (24 Hours)
+        // Store wrapper object to keep model info
+        await redis.set(cacheKey, { aiResponse, modelUsed }, { ex: 86400 });
+      } catch (error) {
+        console.error("AI Error:", error);
+        // Fallback or handle error
         aiResponse = {
-          analysis: "API Key Missing - Demo Mode",
-          score: 5,
-          macros: { protein: "Unknown", carbs: "Unknown", fat: "Unknown" },
-          suggestions: ["Add GEMINI_API_KEY to .env to see real AI analysis."],
+          analysis: "AI Service Temporarily Unavailable",
+          score: 0,
+          macros: { protein: "?", carbs: "?", fat: "?" },
+          suggestions: ["Please try again later."],
         };
+        modelUsed = "error-fallback";
       }
     }
 
     return NextResponse.json({
       success: true,
       totals: {
-        calories: totalCalories,
-        protein: totalProtein,
-        carbs: totalCarbs,
-        fat: totalFat,
+        calories:
+          totalCalories || aiResponse?.estimated_nutrition?.calories || 0,
+        protein: totalProtein || aiResponse?.estimated_nutrition?.protein || 0,
+        carbs: totalCarbs || aiResponse?.estimated_nutrition?.carbs || 0,
+        fat: totalFat || aiResponse?.estimated_nutrition?.fat || 0,
       },
       ai: aiResponse,
+      model: modelUsed,
     });
   }, req);

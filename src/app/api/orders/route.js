@@ -52,9 +52,18 @@ export const POST = (req) =>
       userId: user.uid,
       items: data.items,
       totalAmount: data.totalAmount,
-      status: "pending", // pending, paid, processing, completed, cancelled
-      paymentStatus: "pending",
+      subtotal: data.subtotal,
+      tax: data.tax,
+      deliveryFee: data.deliveryFee,
+      discount: data.discount,
+      couponCode: data.couponCode,
+      // Allow passing status if verified payment
+      status: data.status || "pending",
+      paymentStatus: data.paymentStatus || "pending",
+      paymentDetails: data.paymentDetails || null, // Store Razorpay IDs
       shippingAddress: data.shippingAddress,
+      shippingAddressDetails: data.shippingAddressDetails, // Store full address object
+      instructions: data.instructions,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

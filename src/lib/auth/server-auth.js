@@ -16,6 +16,8 @@ export async function verifyAuth(request) {
   const token = authHeader.split("Bearer ")[1];
   try {
     const decodedToken = await adminAuth.verifyIdToken(token);
+    // It extracts the data inside the token
+    // (like uid, email, email_verified) and gives it back to you as the decodedToken object.
     return decodedToken;
   } catch (error) {
     logger.error("verifyAuth error", error);

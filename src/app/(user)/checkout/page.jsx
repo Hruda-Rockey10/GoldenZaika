@@ -163,7 +163,7 @@ export default function OrderPage() {
         name: "Golden Zaika",
         description: "Food Order",
         order_id: order.id,
-        handler: async function (response) {
+        handler: async function (response) { // It runs ONLY if the user successfully pays money in the popup.
           // 3. Verify Payment
           try {
             const token = await auth.currentUser?.getIdToken();
@@ -174,9 +174,9 @@ export default function OrderPage() {
                 // Construct full address string for backward compatibility or store object
                 const fullAddressString = `${selectedAddress.label}: ${selectedAddress.street}, ${selectedAddress.city} - ${selectedAddress.zip}. \nPhone: ${selectedAddress.phone}`;
                 
-                const orderPayload = {
+                  const orderPayload = {
                   shippingAddress: fullAddressString,
-                  shippingAddressDetails: selectedAddress, // Store full object for future use
+                  shippingAddressDetails: selectedAddress, 
                   instructions: instructions || "",
                   items: items.map(item => ({...item, id: item.id || item._id})),
                   totalAmount: total,
@@ -185,7 +185,13 @@ export default function OrderPage() {
                   deliveryFee,
                   discount,
                   couponCode: couponApplied ? couponCode : null,
-                  status: "Placed", // Explicitly set initial status
+                  status: "Paid", 
+                  paymentStatus: "Success",
+                  paymentDetails: {
+                      razorpay_payment_id: response.razorpay_payment_id,
+                      razorpay_order_id: response.razorpay_order_id,
+                      razorpay_signature: response.razorpay_signature
+                  }
                 };
 
                 const saveOrderRes = await orderService.createOrder(orderPayload);
@@ -218,8 +224,8 @@ export default function OrderPage() {
         },
       };
 
-      const rzp1 = new window.Razorpay(options);
-      rzp1.open();
+      const rzp1 = new window.Razorpay(options); // after this line, the payment popup will open.
+      rzp1.open(); // his command forces the Razorpay Popup (the white box with Card/UPI options) to appear on the user's screen.
       rzp1.on("payment.failed", function (response) {
         toast.error("Payment Failed: " + response.error.description);
         setLoading(false);

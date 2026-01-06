@@ -37,11 +37,14 @@ export const GET = (req) =>
 
     if (!products) {
       // Cache miss - fetch from DB
-      const query = adminDb.collection("products");
+      const query = adminDb.collection("products"); // adminDb.collection("products") gives you a Reference (A Pointer).
       // We fetch ALL to cache ALL
       const snapshot = await query.get();
       products = snapshot.docs
         .map((doc) => ({
+          // doc.id = "burger-123"                           {id: "burger-123"
+          // doc.data() = { name: "Burger", price: 100 }     name: "Burger", price: 100
+          //                                                    }
           id: doc.id,
           ...doc.data(),
         }))
@@ -49,9 +52,12 @@ export const GET = (req) =>
           (product) => product.isActive !== false // Only filter by isActive (deleted), keep isAvailable (stock) visible
         );
 
+      // You CANNOT do: docs[0].name. (Undefined)
+      // You MUST do: docs[0].data().name. (Correct)
+
       // Set cache
       try {
-        await redis.set(PRODUCTS_CACHE_KEY, products, { ex: CACHE_TTL });
+        await redis.set(PRODUCTS_CACHE_KEY, products, { ex: CACHE_TTL }); //ex = expiry
       } catch (e) {
         console.warn("Redis SET error", e);
       }
@@ -63,6 +69,21 @@ export const GET = (req) =>
     }
 
     return NextResponse.json({ success: true, products });
+    // const products = [ {name: "Burger"}, {name: "Pizza"} ];
+
+    // return NextResponse.json({
+    //     success: true,
+    //     products
+    // });
+
+    //The JSON sent to the frontend is:
+    // {
+    //   "success": true,
+    //   "products": [
+    //       { "name": "Burger" },
+    //       { "name": "Pizza" }
+    //   ]
+    // }
   }, req);
 
 export const POST = (req) =>
@@ -93,3 +114,8 @@ export const POST = (req) =>
 
     return NextResponse.json({ success: true, id: docRef.id });
   }, req);
+
+//   NextResponse.json(...) (The Sender)
+// Where: Used in the Backend (API Route).
+// res.json() (The Receiver)
+// Where: Used in the Frontend (fetch in product.service.js).

@@ -10,6 +10,12 @@ export const DELETE = (req, context) =>
     const { params } = context;
     const { id } = await params; // This is productId
 
+    /* context object looks like this: */
+    // {
+    //    params: {
+    //       id: "pizza-123" // The value from the URL
+    //            }
+    // }
     await adminDb
       .collection("users")
       .doc(user.uid)
@@ -29,3 +35,12 @@ export const DELETE = (req, context) =>
       message: "Removed from favorites",
     });
   }, req);
+
+//   1. The Folder Name: Your file is in a folder named [id].
+//   The brackets [] tell Next.js:
+//  "Whatever value is in this position of the URL, save it into a variable named 'id'."
+
+// 2. The Request: URL: /api/user/favorites/pizza-123
+
+// 3. The Code Extraction: Next.js packs this information into the second argument of your function,
+//  often called context (or implicitly handled).

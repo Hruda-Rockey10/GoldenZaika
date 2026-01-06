@@ -68,7 +68,7 @@ export default function LoginPage() {
       if (document.activeElement !== passwordRef.current) blink();
     }, Math.random() * 4000 + 2000);
 
-    return () => {
+    return () => {  // When you leave the page (Unmount): or Before the effect re-runs (Re-render) it cleans the previous effect
       window.removeEventListener("mousemove", eyeFollow);
       clearInterval(blinkInterval);
       idleAnim.kill();
@@ -207,6 +207,8 @@ export default function LoginPage() {
             <label className="block text-sm font-medium text-gray-200 mb-2">Password</label>
             <input
               ref={passwordRef}
+              //if (document.activeElement !== passwordRef.current) {
+               // blink()
               type="password"
               value={password}
               onFocus={onPasswordFocus}

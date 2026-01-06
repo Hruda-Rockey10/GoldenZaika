@@ -2,12 +2,16 @@ import { NextResponse } from "next/server";
 import { logger } from "@/lib/logger/logger";
 import { v4 as uuidv4 } from "uuid";
 import { getRateLimiter } from "@/lib/redis/ratelimit";
-
+// handler is actually Your Code from route.js (the part inside async (request) => { ... }).
 export async function apiWrapper(handler, req, context) {
   const requestId = uuidv4();
   const startTime = Date.now();
+  // (req.url): http://localhost:3000/api/products?category=Biryani
   const url = new URL(req.url);
+  // .href: The whole thing.  .protocol: http:  .hostname: localhost .port: 3000
+  // .pathname: /api/products (What you used ✅)
   const endpoint = url.pathname;
+  // Result: /api/products
 
   // Rate Limiting Logic
   // Check for specialized routes
@@ -25,9 +29,14 @@ export async function apiWrapper(handler, req, context) {
     try {
       // Use IP for now. Ideally should be User ID if logged in.
       const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
+      // User (IP: 1.2.3.4) -> Vercel Proxy (IP: 9.9.9.9) -> Your App
+      // x-forwarded-for is standard way to find the Real IP Address of a user.
+      // x-forwarded-for: 1.2.3.4
       const { success, limit, remaining, reset } = await getRateLimiter(
         limitType
       ).limit(ip);
+      // .limit(ip):
+      // Asks Redis: "Has user 1.2.3.4 used up their 15 tickets?"
 
       if (!success) {
         logger.warn(`Rate Limit Exceeded`, { ip, endpoint });
@@ -54,6 +63,8 @@ export async function apiWrapper(handler, req, context) {
 
   try {
     const response = await handler(req, context);
+    // handler is actually Your Code from route.js (the part inside async (request) => { ... }).
+    // handler(req, context) effectively means: "Execute the specific logic defined in route.js right now."
 
     const duration = Date.now() - startTime;
     const status = response.status;
@@ -68,7 +79,9 @@ export async function apiWrapper(handler, req, context) {
       status,
     });
 
-    return response;
+    return response; //If you did return NextResponse.json(response):
+    // You would be putting the Box inside another Box (Nested JSON),
+    //  which would break your API
   } catch (error) {
     const duration = Date.now() - startTime;
     logger.error("API Error", {
@@ -94,3 +107,8 @@ export async function apiWrapper(handler, req, context) {
     );
   }
 }
+
+//   NextResponse.json(...) (The Sender)
+// Where: Used in the Backend (API Route).
+// res.json() (The Receiver)
+// Where: Used in the Frontend (fetch in product.service.js).

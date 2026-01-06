@@ -1,36 +1,40 @@
-import axios from "axios";
 import { auth } from "@/lib/firebase/client";
-
-const API_URL = "/api/user/favorites";
 
 const getAuthHeaders = async () => {
   const token = await auth.currentUser?.getIdToken();
   return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
   };
 };
 
 export const favoriteService = {
   getMyFavorites: async () => {
     const headers = await getAuthHeaders();
-    const response = await axios.get(API_URL, headers);
-    return response.data;
+    const res = await fetch("/api/user/favorites", { headers });
+    if (!res.ok) throw new Error("Failed to fetch favorites");
+    return await res.json();
   },
 
   addFavorite: async (productId) => {
     const headers = await getAuthHeaders();
-    const response = await axios.post(API_URL, { productId }, headers);
-    return response.data;
+    const res = await fetch("/api/user/favorites", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ productId }),
+    });
+    if (!res.ok) throw new Error("Failed to add favorite");
+    return await res.json();
   },
 
   removeFavorite: async (productId) => {
     const headers = await getAuthHeaders();
-    // Use params or body? Delete with body is tricky in some clients/proxies.
-    // Better to use URL param: /api/user/favorites/[productId]
-    const response = await axios.delete(`${API_URL}/${productId}`, headers);
-    return response.data;
+    const res = await fetch(`/api/user/favorites/${productId}`, {
+      method: "DELETE",
+      headers,
+    });
+    if (!res.ok) throw new Error("Failed to remove favorite");
+    return await res.json();
   },
 
   toggleFavorite: async (productId, isFavorite) => {

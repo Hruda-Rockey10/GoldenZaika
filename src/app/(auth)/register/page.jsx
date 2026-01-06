@@ -241,7 +241,7 @@ export default function RegisterPage() {
               onBlur={onInputBlur}
               onChange={handleChange}
               className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-primary-gold text-white placeholder-john@example.com"
-              placeholder="john@example.com"
+              placeholder="Test@example.com"
               required
               disabled={loading}
             />

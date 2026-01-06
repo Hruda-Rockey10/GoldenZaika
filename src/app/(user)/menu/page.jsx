@@ -8,10 +8,10 @@ import { productService } from "@/services/product.service";
 import { favoriteService } from "@/services/favorite.service";
 import { Search, ShoppingCart, Heart, Sparkles, Loader2 } from "lucide-react";
 import FoodModal from "@/components/ui/FoodModal";
-import axios from "axios";
 import { motion } from "framer-motion";
 import { foodCategories } from "@/constants/data";
 import { toast } from "react-toastify";
+import { aiService } from "@/services/ai.service";
 
 export default function MenuPage() {
   const { user } = useAuthStore();
@@ -102,10 +102,11 @@ export default function MenuPage() {
     
     setIsSearching(true);
     try {
-       const res = await axios.post("/api/ai/search", { query: searchTerm });
-       if (res.data.success) {
-           setSearchResults(res.data.items);
-           if (category !== "All" && res.data.items.length > 0) setCategory("All");
+       const data = await aiService.search(searchTerm);
+       
+       if (data.success) {
+           setSearchResults(data.items);
+           if (category !== "All" && data.items.length > 0) setCategory("All");
        }
     } catch (e) {
        console.error(e);

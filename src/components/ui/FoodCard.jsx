@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { ShoppingCart, Star, Info, Heart } from "lucide-react";
 
-export default function FoodCard({
+export default function FoodCard({  //FoodCard ({props}) {  return ()};
   food,
   index,
   onSelect,
@@ -48,11 +48,10 @@ export default function FoodCard({
         )}
 
         {/* Favorite Button (Only if handler is provided) */}
-        {onToggleFavorite && (
+        {onToggleFavorite && (   // This reads like: "IF onToggleFavorite exists, THEN show the code in parenthesis."
           <button
               onClick={(e) => {
-                e.stopPropagation();
-                onToggleFavorite(e, food);
+                onToggleFavorite(food);
               }}
               className={`absolute top-3 left-3 p-2 rounded-full backdrop-blur-sm border transition-all duration-300 z-10 ${
                   isFavorite 
@@ -112,8 +111,7 @@ export default function FoodCard({
           ) : quantity > 0 ? (
             <div className="flex items-center justify-between bg-black/40 rounded-xl p-1 border border-white/10">
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
+                onClick={() => {
                   updateQuantity(id, quantity - 1);
                 }}
                 className="w-10 h-10 flex items-center justify-center text-white hover:text-primary-gold transition-colors font-bold text-xl"
@@ -124,8 +122,7 @@ export default function FoodCard({
                 {quantity}
               </span>
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
+                onClick={() => {
                   addToCart(food);
                 }}
                 className="w-10 h-10 flex items-center justify-center text-white hover:text-primary-gold transition-colors font-bold text-xl"
@@ -135,8 +132,7 @@ export default function FoodCard({
             </div>
           ) : (
             <button
-              onClick={(e) => {
-                e.stopPropagation();
+              onClick={() => {
                 addToCart(food);
               }}
               className="w-full py-3 bg-white/10 border border-white/10 text-white font-bold rounded-xl hover:bg-primary-gold hover:text-black hover:border-primary-gold transition-all flex items-center justify-center gap-2 group/btn"

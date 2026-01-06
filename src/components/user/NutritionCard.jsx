@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { Sparkles, Loader2, Info } from "lucide-react";
-import axios from "axios";
 import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
+import { aiService } from "@/services/ai.service";
 
 export default function NutritionCard({ items }) {
   const [analysis, setAnalysis] = useState(null);
@@ -15,10 +15,12 @@ export default function NutritionCard({ items }) {
     if (!items || items.length === 0) return;
     setLoading(true);
     setExpanded(true);
+
     try {
-      const res = await axios.post("/api/ai/nutrition", { items });
-      if (res.data.success) {
-        setAnalysis(res.data);
+      const data = await aiService.getNutritionAnalysis(items);
+
+      if (data.success) {
+        setAnalysis(data);
       }
     } catch (error) {
       toast.error("Failed to analyze nutrition");

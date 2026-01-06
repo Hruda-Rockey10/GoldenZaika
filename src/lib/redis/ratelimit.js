@@ -12,6 +12,7 @@ const redis = new Redis({
  * @param {'strict'|'moderate'|'loose'} type
  */
 export const getRateLimiter = (type = "moderate") => {
+  // type = "moderate" is default
   switch (type) {
     case "strict":
       // 15 requests per 60 seconds (For AI/Auth)
@@ -19,6 +20,8 @@ export const getRateLimiter = (type = "moderate") => {
         redis,
         limiter: Ratelimit.slidingWindow(15, "60 s"),
         prefix: "@upstash/ratelimit:strict",
+        // It looks at the last 60 seconds from right now.
+        // "Have you made 15 requests between 12:00:05 and 12:01:05?"
         analytics: true,
       });
     case "loose":

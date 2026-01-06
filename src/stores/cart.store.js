@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 
 export const useCartStore = create(
   persist(
+    // persist is used to store the cart data in the local storage
     (set, get) => ({
       items: [],
 

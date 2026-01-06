@@ -25,11 +25,21 @@ export const GET = (req) =>
       .doc(user.uid)
       .collection("favorites")
       .get();
-
+    // This is the actual JavaScript Array containing all the document objects found.
     const favorites = snapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data(),
+      ...doc.data(), // data inside the document
     }));
+
+    //     [
+    //   {
+    //     // 1. The document ID (from the list in your image)
+    //     id: "00gNRxQm2ngsgnf2rvv8"
+    //     // 2. The data INSIDE that document (...doc.data())
+    //     productId: "00gNRxQm2ngsgnf2rvv8", // Usually matches the ID in your setup
+    //     addedAt: Timestamp // Firebase Timestamp object
+    //   }
+    //     ]
 
     // Fetch product details for each favorite
     // Optimization: This solves N+1 problem by caching the enriched result
@@ -52,6 +62,10 @@ export const GET = (req) =>
       (p) => p !== null
     );
 
+    // Inside the map: When you return { ... }, that specific object becomes the result of that single iteration's Promise.
+    // Promise.all: The Promise.all(productPromises) waits for every single one of those returns to finish.
+    // Final Array: Once finished, Promise.all creates a new array containing all those returned objects in the exact same order.
+
     // Cache the enriched list
     try {
       await redis.set(cacheKey, products, { ex: 3600 });
@@ -65,7 +79,7 @@ export const GET = (req) =>
 export const POST = (req) =>
   apiWrapper(async (request) => {
     const user = await verifyAuth(request);
-    const { productId } = await request.json();
+    const { productId } = await request.json(); //decodes the json
 
     if (!productId) throw new Error("Product ID is required");
 
@@ -73,11 +87,16 @@ export const POST = (req) =>
       .collection("users")
       .doc(user.uid)
       .collection("favorites")
-      .doc(productId)
+      .doc(productId) // to prevent duplicate favorites
       .set({
         productId,
         addedAt: new Date(),
       });
+
+    //       Goal	Code to use
+    // Random ID	.add(data)
+    // Custom ID	.doc("custom_id").set(data)
+    // Random ID (Manual)	.doc().set(data)
 
     // Invalidate Cache
     try {

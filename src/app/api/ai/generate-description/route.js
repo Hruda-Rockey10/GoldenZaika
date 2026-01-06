@@ -1,20 +1,22 @@
 import { NextResponse } from "next/server";
 import { apiWrapper } from "@/utils/api-wrapper";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
+import OpenAI from "openai";
 import { verifyAuth, verifyAdmin } from "@/lib/auth/server-auth";
 
-// Initialize Gemini
-let genAI;
-let model;
-try {
-  if (process.env.GEMINI_API_KEY) {
-    genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
-  }
-} catch (e) {
-  console.error("Gemini Init Error", e);
-}
+const openai = new OpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY,
+  defaultHeaders: {
+    "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+    "X-Title": "Golden Zaika",
+  },
+});
+const MODELS = [
+  "openai/gpt-oss-120b:free",
+  "google/gemini-2.0-flash-exp:free",
+  "mistralai/devstral-2512:free",
+  "xiaomi/mimo-v2-flash:free",
+];
 
 const SYSTEM_PROMPT = `
 You are a Copywriting Expert for a premium food delivery brand called "Golden Zaika".
@@ -60,31 +62,60 @@ export const POST = (req) =>
 
     let description =
       "Delicious and authentic dish prepared with fresh ingredients.";
+    let modelUsed = "fallback";
 
-    if (model) {
-      try {
-        const result = await model.generateContent([SYSTEM_PROMPT, prompt]);
-        const response = await result.response;
-        const text = response.text();
+    try {
+      let text = null;
 
-        // Extract JSON from response (Gemini might wrap it in markdown)
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
-          description = parsed.description || description;
-        } else {
-          description = text.replace(/```json|```/g, "").trim();
+      // Retry Logic with Multiple Models
+      for (const model of MODELS) {
+        try {
+          console.log(`🤖 [DESCRIPTION] Calling Model: ${model}`);
+          const completion = await openai.chat.completions.create({
+            model: model,
+            messages: [
+              { role: "system", content: SYSTEM_PROMPT },
+              { role: "user", content: prompt },
+            ],
+            response_format: { type: "json_object" },
+          });
+
+          text = completion.choices[0].message.content;
+          if (text) {
+            console.log(`✅ [DESCRIPTION] Success with ${model}`);
+            modelUsed = model;
+            break; // Success!
+          }
+        } catch (modelError) {
+          console.warn(
+            `⚠️ [DESCRIPTION] Model ${model} failed:`,
+            modelError.message
+          );
+          // Continue to next model
         }
-      } catch (e) {
-        console.error("Gemini Error", e);
       }
-    } else {
-      description =
-        "[Demo] Aromatic and delicious dish made with secret spices. (Add GEMINI_API_KEY to .env)";
+
+      if (!text) throw new Error("All AI models failed");
+
+      // text is populated above
+
+      // Extract JSON from response (Some models might still wrap it)
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        description = parsed.description || description;
+      } else {
+        // Fallback if no JSON found
+        description = text.replace(/```json|```/g, "").trim();
+      }
+    } catch (e) {
+      console.error("AI Generation Error", e);
+      modelUsed = "error-fallback";
     }
 
     return NextResponse.json({
       success: true,
       description: description,
+      model: modelUsed,
     });
   }, req);

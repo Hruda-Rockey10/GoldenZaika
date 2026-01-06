@@ -1,20 +1,23 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
 import { apiWrapper } from "@/utils/api-wrapper";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 import { redis } from "@/lib/redis/upstash"; // Import Redis
 
-// Initialize Gemini
-let genAI;
-let model;
-try {
-  if (process.env.GEMINI_API_KEY) {
-    genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
-  }
-} catch (e) {
-  console.error("Gemini Init Error", e);
-}
+const openai = new OpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY,
+  defaultHeaders: {
+    "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+    "X-Title": "Golden Zaika",
+  },
+});
+const MODELS = [
+  "xiaomi/mimo-v2-flash:free",
+  "google/gemini-2.0-flash-exp:free",
+  "openai/gpt-oss-120b:free",
+  "mistralai/devstral-2512:free",
+];
 
 const SYSTEM_PROMPT = `
 You are a Search query parser for a food delivery app.
@@ -57,10 +60,16 @@ export const POST = (req) =>
 
     const cacheKey = `ai:search:${query.toLowerCase().trim()}`;
     let filters = null;
+    let modelUsed = "redis-cache";
 
     // 1. Try Cache
     try {
-      filters = await redis.get(cacheKey);
+      const cachedData = await redis.get(cacheKey);
+      if (cachedData) {
+        console.log("🟢 [SEARCH] Serving from Redis Cache");
+        filters = cachedData.filters;
+        modelUsed = cachedData.modelUsed || "redis-cache";
+      }
     } catch (e) {
       console.warn("Redis GET error", e);
     }
@@ -68,24 +77,54 @@ export const POST = (req) =>
     if (!filters) {
       // 2. Cache Miss - Call OpenAI
       filters = { keywords: [query] }; // Default fallback
+      modelUsed = "fallback";
 
-      if (model) {
-        try {
-          const result = await model.generateContent([SYSTEM_PROMPT, query]);
-          const response = await result.response;
-          const text = response.text();
+      try {
+        let text = null;
 
-          // Extract JSON from response
-          const jsonMatch = text.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            filters = JSON.parse(jsonMatch[0]);
+        // Retry Logic with Multiple Models
+        for (const model of MODELS) {
+          try {
+            console.log(`🤖 [SEARCH] Calling Model: ${model}`);
+            const completion = await openai.chat.completions.create({
+              model: model,
+              messages: [
+                { role: "system", content: SYSTEM_PROMPT },
+                { role: "user", content: query },
+              ],
+              response_format: { type: "json_object" },
+            });
+
+            text = completion.choices[0].message.content;
+            if (text) {
+              console.log(`✅ [SEARCH] Success with ${model}`);
+              modelUsed = model;
+              break; // Success!
+            }
+          } catch (modelError) {
+            console.warn(
+              `⚠️ [SEARCH] Model ${model} failed:`,
+              modelError.message
+            );
+            // Continue to next model
           }
-
-          // 3. Set Cache (1 Hour)
-          await redis.set(cacheKey, filters, { ex: 3600 });
-        } catch (e) {
-          console.error("Gemini Error", e);
         }
+
+        if (!text) throw new Error("All AI models failed");
+
+        // text is populated above
+
+        // Extract JSON from response
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          filters = JSON.parse(jsonMatch[0]);
+        }
+
+        // 3. Set Cache (1 Hour)
+        await redis.set(cacheKey, { filters, modelUsed }, { ex: 3600 });
+      } catch (e) {
+        console.error("AI Generation Error", e);
+        modelUsed = "error-fallback";
       }
     }
 
@@ -139,5 +178,6 @@ export const POST = (req) =>
       success: true,
       items: items,
       filtersUsed: filters,
+      model: modelUsed,
     });
   }, req);

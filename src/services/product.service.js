@@ -10,17 +10,25 @@ class ProductService {
   }
 
   async getProducts(params = {}) {
+    // params = { category: "Biryani", spicy: true } or {} empty object
     try {
       const query = new URLSearchParams(params).toString();
-      // Using /api/products route handler
+      //       Input: { category: "Biryani", spicy: true } or {} empty object
+      //       Output: "category=Biryani&spicy=true" or ""
       const res = await fetch(`/api/products?${query}`);
       if (!res.ok) throw new Error("Failed to fetch products");
-      return await res.json();
+      return await res.json(); // Calls res.json() -> Converts String back to Object { success: true }.
     } catch (error) {
       logger.error("ProductService.getProducts error", error);
       throw error;
     }
   }
+
+  // Frontend (res.json()):
+  // Goal: Convert String -> Object. (Decoding)
+  // Backend (NextResponse.json()):
+  // Goal: Convert Object -> String. (Encoding).
+  // They are opposites that work together to teleport data.
 
   async getProductById(id) {
     try {

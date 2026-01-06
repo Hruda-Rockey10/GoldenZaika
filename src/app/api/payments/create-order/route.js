@@ -19,7 +19,9 @@ export const POST = (req) =>
       receipt: `receipt_${Date.now()}_${user.uid.slice(0, 5)}`,
     };
 
-    const order = await razorpay.orders.create(options);
+    const order = await razorpay.orders.create(options); // Handshake with Razorpay.
+    //It returns an object (order) containing id: "order_KzX3...".
+    // You send this ID to the frontend so the payment popup can open securely.
     if (!order) {
       throw new Error("Razorpay order creation failed");
     }

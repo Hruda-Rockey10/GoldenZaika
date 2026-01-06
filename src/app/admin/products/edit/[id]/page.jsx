@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import axios from "axios";
 import { toast } from "react-toastify";
 import { Upload, Sparkles, Loader2, ArrowLeft } from "lucide-react";
 import Image from "next/image";
@@ -85,7 +84,7 @@ export default function EditProductPage() {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setImage(file);
-      setImagePreview(URL.createObjectURL(file));
+      setImagePreview(URL.createObjectURL(file)); //Solution: URL.createObjectURL(file) creates a Fake, Temporary URL (like blob:http://localhost:3000/a1b2-c3d4...) that points to the file in your computer's memory.
     }
   };
 
@@ -96,13 +95,18 @@ export default function EditProductPage() {
     }
     setGeneratingDesc(true);
     try {
-      const res = await axios.post("/api/ai/generate-description", {
-        name: data.name,
-        category: data.category,
-        isVeg: data.isVeg === "true"
+      const res = await fetch("/api/ai/generate-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+           name: data.name,
+           category: data.category,
+           isVeg: data.isVeg === "true"
+        })
       });
-      if (res.data.success) {
-        setData(prev => ({ ...prev, description: res.data.description }));
+      const result = await res.json();
+      if (result.success) {
+        setData(prev => ({ ...prev, description: result.description }));
         toast.success("Description generated!");
       }
     } catch (error) {
@@ -132,14 +136,18 @@ export default function EditProductPage() {
             throw new Error("Not authenticated");
           }
 
-          const uploadRes = await axios.post("/api/media/upload", formData, {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              "Authorization": `Bearer ${token}`
-            }
+          const uploadRes = await fetch("/api/media/upload", {
+              method: "POST",
+              headers: {
+                 "Authorization": `Bearer ${token}`
+                 // Do NOT set Content-Type for FormData
+              },
+              body: formData
           });
-          if (uploadRes.data.success) {
-            imageUrl = uploadRes.data.imageUrl;
+          
+          const uploadData = await uploadRes.json();
+          if (uploadData.success) {
+            imageUrl = uploadData.imageUrl;
           }
         } catch (uploadError) {
           console.error("Upload Error", uploadError);

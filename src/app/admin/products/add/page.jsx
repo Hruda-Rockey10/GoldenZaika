@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
 import { toast } from "react-toastify";
 import { Upload, Sparkles, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { foodCategories } from "@/constants/data";
 import { productService } from "@/services/product.service";
 import { auth } from "@/lib/firebase/client";
+import { aiService } from "@/services/ai.service";
 
 export default function AddFoodPage() {
   const router = useRouter();
@@ -51,13 +51,10 @@ export default function AddFoodPage() {
      }
      setGeneratingDesc(true);
      try {
-         const res = await axios.post("/api/ai/generate-description", {
-             name: data.name,
-             category: data.category,
-             isVeg: data.isVeg === "true"
-         });
-         if (res.data.success) {
-             setData(prev => ({ ...prev, description: res.data.description }));
+         const result = await aiService.generateDescription(data.name, data.category, data.isVeg === "true");
+         
+         if (result.success) {
+             setData(prev => ({ ...prev, description: result.description }));
              toast.success("Description generated!");
          }
      } catch (error) {
@@ -89,16 +86,21 @@ export default function AddFoodPage() {
                throw new Error("Not authenticated");
              }
 
-             const uploadRes = await axios.post("/api/media/upload", formData, {
+             const uploadRes = await fetch("/api/media/upload", {
+                 method: "POST",
                  headers: {
-                   "Content-Type": "multipart/form-data",
-                   "Authorization": `Bearer ${token}`
-                 }
+                    "Authorization": `Bearer ${token}`
+                    // Do NOT set Content-Type for FormData, browser does it with boundary
+                 },
+                 body: formData
              });
-             if (uploadRes.data.success) {
-                 imageUrl = uploadRes.data.imageUrl;
+             
+             const uploadData = await uploadRes.json();
+
+             if (uploadData.success) {
+                 imageUrl = uploadData.imageUrl;
              } else {
-                 throw new Error(uploadRes.data.message || "Upload failed");
+                 throw new Error(uploadData.message || "Upload failed");
              }
           } catch (uploadError) {
              console.error("Upload Error", uploadError);
