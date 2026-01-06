@@ -12,10 +12,10 @@ const openai = new OpenAI({
   },
 });
 const MODELS = [
-  "openai/gpt-oss-120b:free",
-  "google/gemini-2.0-flash-exp:free",
-  "mistralai/devstral-2512:free",
   "xiaomi/mimo-v2-flash:free",
+  "mistralai/devstral-2512:free",
+  "nvidia/nemotron-3-nano-30b-a3b:free",
+  "google/gemini-2.0-flash-exp:free",
 ];
 
 const SYSTEM_PROMPT = `

@@ -16,8 +16,8 @@ const openai = new OpenAI({
 const MODELS = [
   "mistralai/devstral-2512:free",
   "xiaomi/mimo-v2-flash:free",
+  "nvidia/nemotron-3-nano-30b-a3b:free",
   "google/gemini-2.0-flash-exp:free",
-  "openai/gpt-oss-120b:free",
 ];
 
 const SYSTEM_PROMPT = `

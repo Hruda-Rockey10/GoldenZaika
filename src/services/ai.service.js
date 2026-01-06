@@ -7,10 +7,13 @@ let searchPromise = null;
 
 const getAuthHeaders = async () => {
   const token = await auth.currentUser?.getIdToken();
-  return {
-    Authorization: `Bearer ${token}`,
+  const headers = {
     "Content-Type": "application/json",
   };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  return headers;
 };
 
 export const aiService = {
